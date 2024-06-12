@@ -5,11 +5,11 @@ from ui.operations import Operation
 import pymobiledevice3.lockdown, pymobiledevice3.exceptions, pymobiledevice3.services.mobilebackup2
 import subprocess
 
-class App(ft.UserControl): 
-    
+class App(ft.UserControl):
+
     #Must func
     def build(self):
-    
+
         #Import about dialog
         self.about_button = About()
 
@@ -29,45 +29,45 @@ class App(ft.UserControl):
 
         #Folder        
         self.display_folderpath = ft.TextField(
-            hint_text="Select folder icon", width=400, read_only=True, border="none", 
+            hint_text="Select folder icon", width=400, read_only=True, border="none",
             filled=True, max_lines=3, color=ft.colors.WHITE70
         )
 
         self.select_folder_icon = ft.IconButton(
-            icon=ft.icons.FOLDER_ROUNDED, tooltip="Select folder location", 
+            icon=ft.icons.FOLDER_ROUNDED, tooltip="Select folder location",
             icon_size=36, on_click=self.select_folder,
             icon_color=ft.colors.WHITE70
         )
 
-        
+
         #Options
         self.backupbtn = ft.ElevatedButton(
-            "Backup", icon=ft.icons.SETTINGS_BACKUP_RESTORE_ROUNDED, 
+            "Backup", icon=ft.icons.SETTINGS_BACKUP_RESTORE_ROUNDED,
             on_click=lambda e: self.call_operations(backup=True),
             disabled=False, style=ft.ButtonStyle(shape=ft.StadiumBorder(), padding=15),
             icon_color=ft.colors.BLACK87, color=ft.colors.BLACK87, bgcolor=ft.colors.WHITE
         )
 
         self.restorebtn = ft.ElevatedButton(
-            "Restore", 
-            icon=ft.icons.RESTORE_ROUNDED, 
+            "Restore",
+            icon=ft.icons.RESTORE_ROUNDED,
             on_click=lambda e: self.call_operations(restore=True),
             disabled=False, style=ft.ButtonStyle(shape=ft.StadiumBorder(), padding=15),
             icon_color=ft.colors.BLACK87, color=ft.colors.BLACK87, bgcolor=ft.colors.WHITE
         )
 
 
-        
+
         #UI component groups
         self.folder_container = ft.Row(
-            [self.display_folderpath, self.select_folder_icon], 
+            [self.display_folderpath, self.select_folder_icon],
             spacing=10, alignment="center"
         )
-        
+
         self.options_container = ft.Row(
             [self.backupbtn, self.restorebtn], spacing=20, alignment="center")
-        
-        
+
+
         #Main Container
         self.main_container = ft.Stack(
             [
@@ -76,60 +76,53 @@ class App(ft.UserControl):
 
                 #Others
                 ft.Column(
-                    [self.folder_container, self.pwd_encrypt, self.options_container, self.about_button], 
+                    [self.folder_container, self.pwd_encrypt, self.options_container, self.about_button],
                     spacing=30, horizontal_alignment="center"
                 )
             ]
         )
 
-        
+
         return self.main_container
 
 
 
     #Handle folder picker and display folder path
     def select_folder(self, e):
-        
         check = subprocess.run(
-            ['zenity --version'],
-            shell=True,
-            #stdout=subprocess.PIPE,
+            ['bash', '-c', 'zenity --version'],
             capture_output=True
         )
 
         if check.returncode == 0:
-
             res = subprocess.run(
-                ['zenity --file-selection --title="Choose backup folder" --directory'],
-                shell=True,
-                #stdout=subprocess.PIPE,
+                ['bash', '-c', 'zenity --file-selection --title="Choose backup folder" --directory'],
                 capture_output=True
             )
             self.display_folderpath.value = res.stdout.decode().strip()
-
             self.update()
         else:
             self.error_message_dlg.content = ft.Text("Looks like Zenity is not installed", color=ft.colors.WHITE)
             self.error_message_dlg.open = True
             self.update()
-    
+
 
     #Call backup/restore/cancel actions 
     def call_operations(self, backup=False, restore=False):
 
         #check if folder path is specified and run operation
         if(len(self.display_folderpath.value) == 0):
-            
+
             self.no_folder_selected_dlg.open = True
             self.update()
 
             return
-        
+
         #Disable buttons
         self.backupbtn.disabled = True
         self.restorebtn.disabled = True
         self.update()
-        
+
         #to connect to device via USB and perform operations
         try:
             #Create lockdown client
@@ -171,10 +164,10 @@ class App(ft.UserControl):
                     self.error_message_dlg.content = ft.Text("Restore failed: Enter correct password for the encrypted backup", color=ft.colors.WHITE)
                     self.error_message_dlg.open = True
 
-                self.update() 
+                self.update()
 
             lockdown_client = None
-            service = None 
+            service = None
             pwd = None
         finally:
             #Renable buttons

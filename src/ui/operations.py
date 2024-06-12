@@ -58,7 +58,7 @@ class Operation(ft.UserControl):
             service.backup(
                 backup_directory=folder,
                 progress_callback=self.progressbar,
-                full=is_first_backup
+                full=True
             )
         except:
             print(traceback.format_exc())
